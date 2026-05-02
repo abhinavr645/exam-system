@@ -4,10 +4,12 @@ import os
 from groq import Groq
 
 app = Flask(__name__)
-app.secret_key = 'secret123'
+app.secret_key = os.environ.get("SECRET_KEY", "dev-secret")  # set on Render
 
-# 🔐 Groq API
-client = Groq(api_key="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")
+# 🔐 Groq client (no hardcoded key)
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
+client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
+
 
 # ---------------- DATABASE ----------------
 
@@ -52,38 +54,25 @@ def init_db():
     conn.close()
 
 
-def insert_sample_data():
+def insert_user_once():
+    """Insert default users only if table is empty (no wiping on restart)."""
     conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
 
-    cursor.execute("DELETE FROM questions")
+    cursor.execute("SELECT COUNT(*) FROM users")
+    count = cursor.fetchone()[0]
 
-    cursor.execute("""
-    INSERT INTO questions (exam_id, question, option1, option2, option3, option4, correct_option)
-    VALUES (1, '2 + 2 = ?', '3', '4', '5', '6', '4')
-    """)
+    if count == 0:
+        cursor.execute("INSERT INTO users (roll_no, password) VALUES ('123', '123')")
+        cursor.execute("INSERT INTO users (roll_no, password) VALUES ('admin', 'admin')")
+        conn.commit()
 
-    conn.commit()
     conn.close()
 
 
-def insert_user():
-    conn = sqlite3.connect('database.db')
-    cursor = conn.cursor()
-
-    cursor.execute("DELETE FROM users")
-
-    cursor.execute("INSERT INTO users (roll_no, password) VALUES ('123', '123')")
-    cursor.execute("INSERT INTO users (roll_no, password) VALUES ('admin', 'admin')")
-
-    conn.commit()
-    conn.close()
-
-
-# Initialize DB
+# Initialize DB (NO DELETE of questions on startup)
 init_db()
-insert_sample_data()
-insert_user()
+insert_user_once()
 
 
 # ---------------- ROUTES ----------------
@@ -249,11 +238,14 @@ def generate():
     if session.get('user') != 'admin':
         return "Access Denied"
 
+    if not client:
+        return "Groq API key not set. Please configure GROQ_API_KEY."
+
     topic = request.form['topic']
 
     prompt = f"""
     Generate exactly 3 MCQ questions on {topic}.
-    Strict format:
+    Format strictly:
 
     Question: ...
     A) ...
@@ -265,12 +257,11 @@ def generate():
 
     try:
         response = client.chat.completions.create(
-            model="llama-3.1-8b-instant",
+            model="llama3-70b-8192",
             messages=[{"role": "user", "content": prompt}]
         )
 
         content = response.choices[0].message.content
-
         return render_template('generated.html', content=content)
 
     except Exception as e:
@@ -333,4 +324,4 @@ def logout():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
