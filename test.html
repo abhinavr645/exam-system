@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Exam</title>
+
+    <script>
+        // ⏱️ Set time (in seconds)
+        let timeLeft = 60; // change to 10800 for 3 hours
+
+        function startTimer() {
+            let timer = document.getElementById("timer");
+
+            let countdown = setInterval(function () {
+
+                let minutes = Math.floor(timeLeft / 60);
+                let seconds = timeLeft % 60;
+
+                // Display time
+                timer.innerHTML = minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
+
+                timeLeft--;
+
+
+
+                // ⛔ Time up → auto submit (NO alert)
+                if (timeLeft < 0) {
+                    clearInterval(countdown);
+
+                    document.getElementById("message").innerHTML = "Time's up! Submitting...";
+
+                    setTimeout(function () {
+                        document.getElementById("examForm").submit();
+                    }, 1000);
+                }
+
+            }, 1000);
+        }
+
+        window.onload = startTimer;
+    </script>
+
+</head>
+<body>
+
+<h2>Exam</h2>
+
+<h3>Time Left: <span id="timer">Loading...</span></h3>
+
+<p id="message" style="color:red;"></p>
+
+<form id="examForm" method="POST" action="/submit">
+
+{% for q in questions %}
+    <p><b>Q{{ loop.index }}: {{ q.question }}</b></p>
+
+    {% for option in q.options %}
+        <input type="radio" name="q{{ q.id }}" value="{{ option }}"> {{ option }}<br>
+    {% endfor %}
+
+    <br>
+{% endfor %}
+
+<button type="submit">Submit</button>
+
+</form>
+
+</body>
+</html>
