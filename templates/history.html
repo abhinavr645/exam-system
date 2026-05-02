@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>History</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="container">
+
+<h2>Your Test History</h2>
+
+<table>
+<tr>
+    <th>Score</th>
+    <th>Correct</th>
+    <th>Wrong</th>
+    <th>Unanswered</th>
+</tr>
+
+{% for r in results %}
+<tr>
+    <td>{{ r[3] }}</td>
+    <td>{{ r[4] }}</td>
+    <td>{{ r[5] }}</td>
+    <td>{{ r[6] }}</td>
+</tr>
+{% endfor %}
+
+</table>
+
+<br>
+
+<a href="/dashboard"><button>Back</button></a>
+
+</div>
+
+</body>
+</html>
