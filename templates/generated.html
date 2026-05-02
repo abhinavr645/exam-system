@@ -1,1 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Generated Questions</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
 
+<div class="container mt-5">
+
+<div class="card p-4 shadow">
+
+<h3>AI Generated Questions</h3>
+<hr>
+
+<pre>{{ content }}</pre>
+
+<!-- 🔥 SAVE BUTTON -->
+<form method="POST" action="/save_ai">
+    <input type="hidden" name="content" value="{{ content }}">
+    <button class="btn btn-success mt-3 w-100">Save Questions to Database</button>
+</form>
+
+<a href="/admin" class="btn btn-primary mt-3 w-100">Back</a>
+
+</div>
+
+</div>
+
+</body>
+</html>
