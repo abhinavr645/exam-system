@@ -3,10 +3,9 @@
 <head>
     <title>Exam</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/static/style.css">
 
     <script>
-        let timeLeft = 60; // change to 10800 for 3 hours
+        let timeLeft = 120;
 
         function startTimer() {
             let timer = document.getElementById("timer");
@@ -20,18 +19,9 @@
 
                 timeLeft--;
 
-                if (timeLeft === 30) {
-                    document.getElementById("message").innerHTML = "⚠️ Only 30 seconds left!";
-                }
-
                 if (timeLeft < 0) {
                     clearInterval(countdown);
-
-                    document.getElementById("message").innerHTML = "Time's up! Submitting...";
-
-                    setTimeout(function () {
-                        document.getElementById("examForm").submit();
-                    }, 1000);
+                    document.getElementById("examForm").submit();
                 }
 
             }, 1000);
@@ -41,42 +31,36 @@
     </script>
 
 </head>
-<body>
+<body class="bg-light">
 
-<!-- 🔥 NAVBAR -->
-<div class="navbar">
-    <h2>Exam System</h2>
+<!-- Navbar -->
+<nav class="navbar navbar-dark bg-dark px-3">
+    <span class="navbar-brand">Exam</span>
+    <a href="/logout" class="btn btn-danger btn-sm">Logout</a>
+</nav>
 
-    <div>
-        <a href="/dashboard">Home</a>
-        <a href="/history">History</a>
-        <a href="/logout">Logout</a>
-    </div>
-</div>
+<div class="container mt-4">
 
-<!-- 🔥 MAIN CONTENT -->
-<div class="container">
-
-<h2>Exam</h2>
-
-<h3>Time Left: <span id="timer">Loading...</span></h3>
-<p id="message" style="color:red;"></p>
+<h4>Time Left: <span id="timer" class="badge bg-danger">Loading...</span></h4>
 
 <form id="examForm" method="POST" action="/submit">
 
 {% for q in questions %}
-    <div class="question">
+    <div class="card p-3 mt-3 shadow-sm">
         <p><b>Q{{ loop.index }}: {{ q.question }}</b></p>
 
         {% for option in q.options %}
-            <input type="radio" name="q{{ q.id }}" value="{{ option }}"> {{ option }}<br>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="q{{ q.id }}" value="{{ option }}">
+                <label class="form-check-label">{{ option }}</label>
+            </div>
         {% endfor %}
     </div>
 {% endfor %}
 
 <br>
 
-<button type="submit">Submit Exam</button>
+<button class="btn btn-primary">Submit Exam</button>
 
 </form>
 
