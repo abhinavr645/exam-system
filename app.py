@@ -129,6 +129,31 @@ def dashboard():
         return redirect('/')
     return render_template('dashboard.html')
 
+@app.route('/add_question', methods=['POST'])
+def add_question():
+    if 'user' not in session:
+        return redirect('/')
+
+    exam_id = request.form['exam_id']
+    question = request.form['question']
+    option1 = request.form['option1']
+    option2 = request.form['option2']
+    option3 = request.form['option3']
+    option4 = request.form['option4']
+    correct = request.form['correct']
+
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    INSERT INTO questions (exam_id, question, option1, option2, option3, option4, correct_option)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+    """, (exam_id, question, option1, option2, option3, option4, correct))
+
+    conn.commit()
+    conn.close()
+
+    return "Question Added Successfully!"
 
 # Test Page (Protected + DB Questions)
 @app.route('/test/<int:exam_id>')
@@ -155,6 +180,11 @@ def test(exam_id):
 
     return render_template('test.html', questions=questions)
 
+@app.route('/admin')
+def admin():
+    if 'user' not in session:
+        return redirect('/')
+    return render_template('admin.html')
 
 # Submit (Dynamic Scoring)
 @app.route('/submit', methods=['POST'])
