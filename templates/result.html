@@ -6,6 +6,16 @@
 </head>
 <body>
 
+    <div class="navbar">
+    <h2>Exam System</h2>
+
+    <div>
+        <a href="/dashboard">Home</a>
+        <a href="/history">History</a>
+        <a href="/logout">Logout</a>
+    </div>
+</div>
+
 <div class="container">
 
 <h2>Exam Result</h2>
@@ -15,8 +25,7 @@
 <p><b>Wrong:</b> {{ wrong }}</p>
 <p><b>Unanswered:</b> {{ unanswered }}</p>
 
-<h3>Your Score: {{ score }}</h3>
-
+<h2 style="color: green;">Your Score: {{ score }}</h2>
 <a href="/dashboard"><button>Back to Dashboard</button></a>
 
 </div>
