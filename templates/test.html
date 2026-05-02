@@ -2,9 +2,9 @@
 <html>
 <head>
     <title>Exam</title>
+    <link rel="stylesheet" href="/static/style.css">
 
     <script>
-        // ⏱️ Set time (in seconds)
         let timeLeft = 60; // change to 10800 for 3 hours
 
         function startTimer() {
@@ -15,14 +15,14 @@
                 let minutes = Math.floor(timeLeft / 60);
                 let seconds = timeLeft % 60;
 
-                // Display time
                 timer.innerHTML = minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
 
                 timeLeft--;
 
+                if (timeLeft === 30) {
+                    document.getElementById("message").innerHTML = "⚠️ Only 30 seconds left!";
+                }
 
-
-                // ⛔ Time up → auto submit (NO alert)
                 if (timeLeft < 0) {
                     clearInterval(countdown);
 
@@ -42,27 +42,44 @@
 </head>
 <body>
 
+<!-- 🔥 NAVBAR -->
+<div class="navbar">
+    <h2>Exam System</h2>
+
+    <div>
+        <a href="/dashboard">Home</a>
+        <a href="/history">History</a>
+        <a href="/logout">Logout</a>
+    </div>
+</div>
+
+<!-- 🔥 MAIN CONTENT -->
+<div class="container">
+
 <h2>Exam</h2>
 
 <h3>Time Left: <span id="timer">Loading...</span></h3>
-
 <p id="message" style="color:red;"></p>
 
 <form id="examForm" method="POST" action="/submit">
 
 {% for q in questions %}
-    <p><b>Q{{ loop.index }}: {{ q.question }}</b></p>
+    <div class="question">
+        <p><b>Q{{ loop.index }}: {{ q.question }}</b></p>
 
-    {% for option in q.options %}
-        <input type="radio" name="q{{ q.id }}" value="{{ option }}"> {{ option }}<br>
-    {% endfor %}
-
-    <br>
+        {% for option in q.options %}
+            <input type="radio" name="q{{ q.id }}" value="{{ option }}"> {{ option }}<br>
+        {% endfor %}
+    </div>
 {% endfor %}
 
-<button type="submit">Submit</button>
+<br>
+
+<button type="submit">Submit Exam</button>
 
 </form>
+
+</div>
 
 </body>
 </html>
