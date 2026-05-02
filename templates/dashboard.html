@@ -6,19 +6,43 @@
 </head>
 <body>
 
+<!-- 🔥 NAVBAR -->
+<div class="navbar">
+    <h2>Exam System</h2>
+
+    <div>
+        <a href="/dashboard">Home</a>
+        <a href="/history">History</a>
+
+        {% if session['user'] == 'admin' %}
+            <a href="/admin">Admin</a>
+        {% endif %}
+
+        <a href="/logout">Logout</a>
+    </div>
+</div>
+
+<!-- 🔥 MAIN CONTENT -->
 <div class="container">
 
-<h2>Welcome {{ session['user'] }}</h2>
+    <h2>Welcome, {{ session['user'] }} 👋</h2>
 
-<h3>Select Exam</h3>
+    <h3>Select Exam</h3>
 
-<a href="/test/1"><button>Java Test</button></a>
-<a href="/test/2"><button>Aptitude Test</button></a>
+    <div style="margin-top:20px;">
+        <a href="/test/1"><button>Java Test</button></a>
+        <a href="/test/2"><button>Aptitude Test</button></a>
+    </div>
 
-<br><br>
+    <br><br>
 
-<a href="/history"><button>View History</button></a>
-<a href="/logout"><button>Logout</button></a>
+    <h3>Quick Actions</h3>
+
+    <a href="/history"><button>View History</button></a>
+
+    {% if session['user'] == 'admin' %}
+        <a href="/admin"><button>Manage Questions</button></a>
+    {% endif %}
 
 </div>
 
