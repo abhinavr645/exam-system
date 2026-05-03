@@ -299,48 +299,62 @@ def save_ai():
     if session.get('user') != 'admin':
         return "Access Denied"
 
-    content = request.form['content']
-    lines = content.split("\n")
+    content = request.form.get('content')
 
-    conn = sqlite3.connect('database.db')
+    if not content:
+        return "❌ No content received"
+
+    print("CONTENT RECEIVED:\n", content)
+
+    conn = get_db_connection()
     cursor = conn.cursor()
 
-    question = ""
-    options = []
-    answer = ""
+    try:
+        lines = content.split("\n")
 
-    for line in lines:
-        line = line.strip()
+        question = ""
+        options = []
+        answer = ""
 
-        if line.startswith("Question"):
-            question = line.split(":", 1)[1].strip()
-            options = []
+        for line in lines:
+            line = line.strip()
 
-        elif line.startswith(("A)", "B)", "C)", "D)")):
-            options.append(line[2:].strip())
+            if line.lower().startswith("question"):
+                question = line.split(":", 1)[1].strip()
+                options = []
 
-        elif line.startswith("Answer"):
-            answer = line.split(":", 1)[1].strip()
-            answer = answer.replace("A)", "").replace("B)", "").replace("C)", "").replace("D)", "").strip()
+            elif line.startswith(("A)", "B)", "C)", "D)")):
+                options.append(line[2:].strip())
 
-            if len(options) == 4:
-                cursor.execute("""
-                INSERT INTO questions (exam_id, question, option1, option2, option3, option4, correct_option)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-                """, (
-                    1,
-                    question,
-                    options[0],
-                    options[1],
-                    options[2],
-                    options[3],
-                    answer
-                ))
+            elif line.lower().startswith("answer"):
+                answer = line.split(":", 1)[1].strip()
+                answer = answer.replace("A)", "").replace("B)", "").replace("C)", "").replace("D)", "").strip()
 
-    conn.commit()
-    conn.close()
+                if len(options) == 4:
+                    cursor.execute("""
+                        INSERT INTO questions
+                        (exam_id, question, option1, option2, option3, option4, correct_option)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    """, (
+                        1,
+                        question,
+                        options[0],
+                        options[1],
+                        options[2],
+                        options[3],
+                        answer
+                    ))
 
-    return "<h3>AI Questions Saved Successfully! ✅</h3><a href='/admin'>Back</a>"
+        conn.commit()
+        conn.close()
+
+        return "<h3>✅ Questions saved successfully!</h3><a href='/admin'>Back</a>"
+
+    except Exception as e:
+        conn.rollback()
+        conn.close()
+        print("ERROR:", e)
+        return f"❌ Error occurred: {e}"
 
 
 @app.route('/logout')
