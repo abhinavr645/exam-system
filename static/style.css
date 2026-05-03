@@ -37,12 +37,36 @@ body {
     padding: 30px;
 }
 
-/* Cards */
+/* Card */
 .card {
+    background: white;
+    padding: 20px;
     border-radius: 12px;
 }
 
 /* Buttons */
 .btn {
+    padding: 10px 15px;
+    border: none;
     border-radius: 8px;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: #2563eb;
+    color: white;
+}
+
+.btn-success {
+    background: #16a34a;
+    color: white;
+}
+
+.btn-danger {
+    background: #dc2626;
+    color: white;
+}
+
+.btn:hover {
+    opacity: 0.9;
 }
