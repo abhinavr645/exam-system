@@ -204,9 +204,33 @@ def admin():
     if session['user'] != 'admin':
         return "Access Denied"
 
-    return render_template('admin.html')
+    conn = get_db_connection()
+    cursor = conn.cursor()
 
+    cursor.execute("SELECT * FROM questions")
+    questions = cursor.fetchall()
 
+    conn.close()
+
+    return render_template('admin.html', questions=questions)
+
+@app.route('/delete_question', methods=['POST'])
+def delete_question():
+    if session.get('user') != 'admin':
+        return "Access Denied"
+
+    q_id = request.form['id']
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("DELETE FROM questions WHERE id=%s", (q_id,))
+
+    conn.commit()
+    conn.close()
+
+    return redirect('/admin')
+    
 @app.route('/add_question', methods=['POST'])
 def add_question():
     if session.get('user') != 'admin':
