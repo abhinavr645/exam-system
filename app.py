@@ -300,11 +300,9 @@ def save_ai():
         return "Access Denied"
 
     content = request.form['content']
-    exam_id = request.form.get('exam_id', 1)   # ✅ FIXED
-
     lines = content.split("\n")
 
-    conn = get_db_connection()
+    conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
 
     question = ""
@@ -328,9 +326,9 @@ def save_ai():
             if len(options) == 4:
                 cursor.execute("""
                 INSERT INTO questions (exam_id, question, option1, option2, option3, option4, correct_option)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
                 """, (
-                    exam_id,   # ✅ NOW DYNAMIC
+                    1,
                     question,
                     options[0],
                     options[1],
