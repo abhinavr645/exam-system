@@ -72,7 +72,7 @@ def insert_user_once():
 
 # Initialize DB (NO DELETE of questions on startup)
 init_db()
-insert_user_once()
+
 
 
 # ---------------- ROUTES ----------------
