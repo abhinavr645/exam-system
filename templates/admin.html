@@ -22,16 +22,16 @@
     <option value="2">Aptitude</option>
 </select>
 
-<form method="POST" action="/add_question">
-    <input type="number" name="exam_id" placeholder="Exam ID"><br><br>
-    <input type="text" name="question" placeholder="Question"><br><br>
-    <input type="text" name="option1" placeholder="Option 1"><br><br>
-    <input type="text" name="option2" placeholder="Option 2"><br><br>
-    <input type="text" name="option3" placeholder="Option 3"><br><br>
-    <input type="text" name="option4" placeholder="Option 4"><br><br>
-    <input type="text" name="correct" placeholder="Correct Answer"><br><br>
+<form method="POST" action="/generate">
 
-    <button class="btn btn-success">Add</button>
+    <select name="exam_id" required>
+        <option value="1">Java</option>
+        <option value="2">Aptitude</option>
+    </select><br><br>
+
+    <input type="text" name="topic" placeholder="Topic"><br><br>
+
+    <button class="btn btn-primary">Generate</button>
 </form>
 
 <hr>
