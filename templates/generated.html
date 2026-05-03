@@ -20,6 +20,7 @@
 <pre>{{ content }}</pre>
 
 <form method="POST" action="/save_ai">
+    <input type="hidden" name="exam_id" value="{{ request.form['exam_id'] }}">
     <input type="hidden" name="content" value="{{ content }}">
     <button class="btn btn-success">Save</button>
 </form>
