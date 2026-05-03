@@ -265,16 +265,11 @@ def generate():
     if session.get('user') != 'admin':
         return "Access Denied"
 
-    if not client:
-        return "Groq API key not set."
-
-    # ✅ Get both topic and exam_id
     topic = request.form['topic']
-    exam_id = request.form['exam_id']
 
     prompt = f"""
     Generate exactly 3 MCQ questions on {topic}.
-    Format strictly:
+    Strict format:
 
     Question: ...
     A) ...
@@ -292,15 +287,11 @@ def generate():
 
         content = response.choices[0].message.content
 
-        # ✅ Pass exam_id forward to next page
-        return render_template(
-            'generated.html',
-            content=content,
-            exam_id=exam_id
-        )
+        return render_template('generated.html', content=content)
 
     except Exception as e:
         return f"Error: {e}"
+
 
 
 @app.route('/save_ai', methods=['POST'])
