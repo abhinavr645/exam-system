@@ -17,6 +17,10 @@
 <div class="card">
 
 <h3>Add Question</h3>
+<select name="exam_id" required>
+    <option value="1">Java</option>
+    <option value="2">Aptitude</option>
+</select>
 
 <form method="POST" action="/add_question">
     <input type="number" name="exam_id" placeholder="Exam ID"><br><br>
