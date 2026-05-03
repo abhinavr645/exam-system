@@ -1,25 +1,37 @@
 from flask import Flask, render_template, request, redirect, session
-import sqlite3
 import os
+import psycopg2
 from groq import Groq
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY", "dev-secret")  # set on Render
+app.secret_key = os.environ.get("SECRET_KEY", "dev-secret")
 
-# 🔐 Groq client (no hardcoded key)
+# ---------------- GROQ ----------------
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
 
 
 # ---------------- DATABASE ----------------
 
+def get_db_connection():
+    return psycopg2.connect(os.environ.get("DATABASE_URL"))
+
+
 def init_db():
-    conn = sqlite3.connect('database.db')
+    conn = get_db_connection()
     cursor = conn.cursor()
 
-    cursor.execute('''
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        roll_no TEXT UNIQUE,
+        password TEXT
+    );
+    """)
+
+    cursor.execute("""
     CREATE TABLE IF NOT EXISTS questions (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         exam_id INTEGER,
         question TEXT,
         option1 TEXT,
@@ -27,50 +39,41 @@ def init_db():
         option3 TEXT,
         option4 TEXT,
         correct_option TEXT
-    )
-    ''')
+    );
+    """)
 
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        roll_no TEXT UNIQUE,
-        password TEXT
-    )
-    ''')
-
-    cursor.execute('''
+    cursor.execute("""
     CREATE TABLE IF NOT EXISTS results (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         user_roll TEXT,
         exam_id INTEGER,
         score INTEGER,
         correct INTEGER,
         wrong INTEGER,
         unanswered INTEGER
-    )
-    ''')
+    );
+    """)
 
     conn.commit()
     conn.close()
 
 
 def insert_user_once():
-    """Insert default users only if table is empty (no wiping on restart)."""
-    conn = sqlite3.connect('database.db')
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute("SELECT COUNT(*) FROM users")
     count = cursor.fetchone()[0]
 
     if count == 0:
-        cursor.execute("INSERT INTO users (roll_no, password) VALUES ('123', '123')")
-        cursor.execute("INSERT INTO users (roll_no, password) VALUES ('admin', 'admin')")
+        cursor.execute("INSERT INTO users (roll_no, password) VALUES (%s, %s)", ('123', '123'))
+        cursor.execute("INSERT INTO users (roll_no, password) VALUES (%s, %s)", ('admin', 'admin'))
         conn.commit()
 
     conn.close()
 
 
-# Initialize DB (NO DELETE of questions on startup)
+# Initialize DB
 init_db()
 insert_user_once()
 
@@ -87,10 +90,10 @@ def login():
     roll = request.form['roll']
     password = request.form['password']
 
-    conn = sqlite3.connect('database.db')
+    conn = get_db_connection()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT * FROM users WHERE roll_no=? AND password=?", (roll, password))
+    cursor.execute("SELECT * FROM users WHERE roll_no=%s AND password=%s", (roll, password))
     user = cursor.fetchone()
     conn.close()
 
@@ -112,10 +115,10 @@ def test(exam_id):
     if 'user' not in session:
         return redirect('/')
 
-    conn = sqlite3.connect('database.db')
+    conn = get_db_connection()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT * FROM questions WHERE exam_id=?", (exam_id,))
+    cursor.execute("SELECT * FROM questions WHERE exam_id=%s", (exam_id,))
     data = cursor.fetchall()
     conn.close()
 
@@ -137,7 +140,7 @@ def submit():
 
     user = session['user']
 
-    conn = sqlite3.connect('database.db')
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute("SELECT id, correct_option FROM questions")
@@ -162,7 +165,7 @@ def submit():
 
     cursor.execute("""
     INSERT INTO results (user_roll, exam_id, score, correct, wrong, unanswered)
-    VALUES (?, ?, ?, ?, ?, ?)
+    VALUES (%s, %s, %s, %s, %s, %s)
     """, (user, 1, score, correct_count, wrong_count, unanswered))
 
     conn.commit()
@@ -181,10 +184,10 @@ def history():
     if 'user' not in session:
         return redirect('/')
 
-    conn = sqlite3.connect('database.db')
+    conn = get_db_connection()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT * FROM results WHERE user_roll=?", (session['user'],))
+    cursor.execute("SELECT * FROM results WHERE user_roll=%s", (session['user'],))
     data = cursor.fetchall()
     conn.close()
 
@@ -209,12 +212,12 @@ def add_question():
     if session.get('user') != 'admin':
         return "Access Denied"
 
-    conn = sqlite3.connect('database.db')
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
     INSERT INTO questions (exam_id, question, option1, option2, option3, option4, correct_option)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    VALUES (%s, %s, %s, %s, %s, %s, %s)
     """, (
         request.form['exam_id'],
         request.form['question'],
@@ -231,7 +234,7 @@ def add_question():
     return redirect('/admin')
 
 
-# ---------------- AI GENERATOR ----------------
+# ---------------- AI ----------------
 
 @app.route('/generate', methods=['POST'])
 def generate():
@@ -239,7 +242,7 @@ def generate():
         return "Access Denied"
 
     if not client:
-        return "Groq API key not set. Please configure GROQ_API_KEY."
+        return "Groq API key not set."
 
     topic = request.form['topic']
 
@@ -255,17 +258,13 @@ def generate():
     Answer: option text only
     """
 
-    try:
-        response = client.chat.completions.create(
-            model="llama-3.1-8b-instant",
-            messages=[{"role": "user", "content": prompt}]
-        )
+    response = client.chat.completions.create(
+        model="llama-3.1-8b-instant",
+        messages=[{"role": "user", "content": prompt}]
+    )
 
-        content = response.choices[0].message.content
-        return render_template('generated.html', content=content)
-
-    except Exception as e:
-        return f"Error: {e}"
+    content = response.choices[0].message.content
+    return render_template('generated.html', content=content)
 
 
 @app.route('/save_ai', methods=['POST'])
@@ -276,7 +275,7 @@ def save_ai():
     content = request.form['content']
     lines = content.split("\n")
 
-    conn = sqlite3.connect('database.db')
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     question = ""
@@ -300,7 +299,7 @@ def save_ai():
             if len(options) == 4:
                 cursor.execute("""
                 INSERT INTO questions (exam_id, question, option1, option2, option3, option4, correct_option)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
                 """, (
                     1,
                     question,
